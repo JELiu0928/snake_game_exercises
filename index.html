@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+    <div id="main">
+        <div id="stage">
+            <div id="snake">
+                <div></div>
+                <!-- <div></div> -->
+            </div>
+            <div id="food">
+                <!-- 此步驟只是為了外觀，加不加都可以 -->
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+        </div>
+        <div id="info">
+            <div>SCORE：<span id="score">100</span></div>
+            <div>LEVEL：<span id="level">1</span></div>
+        </div>
+    </div>
+    <script>
+        // 蛇容器
+        const snake = document.getElementById("snake");
+        // 蛇身
+        const snakes = snake.getElementsByTagName("div");
+        // 蛇頭
+        const snakeHead = snakes[0];
+        // 方向
+        let direction;
+        // 合法按鍵
+        const keyArr = ["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"];
+        // 食物
+        const food = document.getElementById("food");
+        // 改變食物位置
+        function changeFood(){
+            // 食物位置應於300*300遊戲介面中，需是0-290且10的倍數
+            // random為0-1隨機數
+            let x = Math.floor(Math.random() * 30) * 10;
+            let y = Math.floor(Math.random() * 30) * 10;
+            food.style.left = x + "px";
+            food.style.top = y + "px";
+            console.log(food.style.left,food.style.top)
+        }
+        changeFood();
+
+        document.addEventListener('keydown', (event)=>{
+            // console.log(event.code);  
+            // console.log(event.key);
+            // 判斷是否為合法按鍵，不然點選其他鍵會停止移動  
+            if(keyArr.includes(event.key)){
+                // 設置方向
+                direction = event.key;
+            }
+            
+        });
+        // 每隔x秒檢查方向
+        setTimeout(function move(){
+            switch (direction) {
+                case "ArrowUp":
+                    console.log('↑')
+                    snakeHead.style.top = snakeHead.offsetTop - 10 + "px";
+                    break;
+                case "ArrowDown":
+                    console.log('↓')
+                    snakeHead.style.top = snakeHead.offsetTop + 10 + "px";
+                    break;
+                case "ArrowLeft":
+                    console.log('←')
+                    snakeHead.style.left = snakeHead.offsetLeft - 10 + "px";
+                    break;
+                case "ArrowRight":
+                    console.log('→')
+                    snakeHead.style.left = snakeHead.offsetLeft + 10 + "px";
+                    break;
+            }
+            // 檢測是否碰到食物
+            if(snakeHead.offsetTop === food.offsetTop && snakeHead.offsetLeft === food.offsetLeft){
+                console.log("碰到食物");
+                changeFood();
+            }
+
+
+            // 需在計時器中調用一次，才可實現移動
+            setTimeout(() => {
+                move();
+            }, 300);
+        }, 300);
+    </script>
+</body>
+</html>
