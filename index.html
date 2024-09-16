@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>貪吃蛇 | Snake game</title>
     <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
@@ -22,7 +22,7 @@
             </div>
         </div>
         <div id="info">
-            <div>SCORE：<span id="score">100</span></div>
+            <div>SCORE：<span id="score">0</span></div>
             <div>LEVEL：<span id="level">1</span></div>
         </div>
     </div>
@@ -31,67 +31,184 @@
         const snake = document.getElementById("snake");
         // 蛇身
         const snakes = snake.getElementsByTagName("div");
-        // 蛇頭
-        const snakeHead = snakes[0];
         // 方向
         let direction;
         // 合法按鍵
         const keyArr = ["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"];
         // 食物
         const food = document.getElementById("food");
+        // 分數及等級
+        let scoreSpan = document.getElementById("score")
+        let levelSpan = document.getElementById("level")
+        // 初始化
+        let score = 0;
+        let level = 1;
+
+
         // 改變食物位置
         function changeFood(){
+            let isValidfoodPosition = false; //不確定是否有用，玩到13級沒有出現碰撞
+            let x;
+            let y;
             // 食物位置應於300*300遊戲介面中，需是0-290且10的倍數
-            // random為0-1隨機數
-            let x = Math.floor(Math.random() * 30) * 10;
-            let y = Math.floor(Math.random() * 30) * 10;
+            // 如果定位為false會不停嘗試找到不與蛇身重疊
+            while(!isValidfoodPosition){
+                // random為0-1隨機數
+                x = Math.floor(Math.random() * 30) * 10;
+                y = Math.floor(Math.random() * 30) * 10;
+                // 檢查定位是否與蛇身重疊
+                isValidfoodPosition = true;
+                for(let i = 0; i<snakes.length;i++ ){
+                    if(snakes[i].offsetLeft === x && snakes[i].offsetHeight === y){
+                        // 如果為false 再找一遍
+                        isValidfoodPosition = false;
+                        break;
+                    }
+                }
+            }
             food.style.left = x + "px";
             food.style.top = y + "px";
             console.log(food.style.left,food.style.top)
         }
-        changeFood();
+        // changeFood(); //可以初始值讓CSS決定，不然有可能會蛇與食物重疊
 
+        /*  蛇不可以掉頭，
+                構成條件：
+                    1.蛇方塊超過2 (snakes.length < 2)
+                    2.不能是相反方向 (returnObj[direction] !== event.key)
+                處理方式： 保持原來方向不變，即direction值不變
+        */
+        const returnObj = {
+            "ArrowUp":"ArrowDown",
+            "ArrowDown":"ArrowUp",
+            "ArrowLeft":"ArrowRight",
+            "ArrowRight":"ArrowLeft"
+        }
+        // 因為計時器的關係，如果在時間內快速點別的鍵再點相反的鍵就會造成回頭
+        // 故給一個flag記錄是否可以設置方向
+        let keyActive = true;
         document.addEventListener('keydown', (event)=>{
             // console.log(event.code);  
             // console.log(event.key);
-            // 判斷是否為合法按鍵，不然點選其他鍵會停止移動  
-            if(keyArr.includes(event.key)){
-                // 設置方向
-                direction = event.key;
+            // 判斷flag(設置方向)與是否為合法按鍵，不然點選其他鍵會停止移動  
+            if(keyActive && keyArr.includes(event.key)){
+                // <2 就表示只有一個方塊(一顆頭)
+                if(snakes.length < 2 || returnObj[direction] !== event.key){
+                    // 設置方向
+                    direction = event.key;
+                    // 當設置好方向後改成false
+                    keyActive = false;
+                }
+                // else{
+                    // 判斷蛇是否掉頭
+                    // 如果當前方向為上，且按鍵點下不為下時，就設置方向
+                    // 這種設置要四種組合，可以用物件來判斷
+                    // if(dir === "ArrowUp" && event.key != "ArrowDown"){
+                        // direction = event.key;
+                    // }else if(......){}
+                    // 物件判斷寫法：如果當前方向為上(此時為下)不等於下時
+                    // if(down !== down) 此時就是掉頭，不設置方向
+                    // if(down !== up) 就設置方向
+                    // if(returnObj[direction] !== event.key){
+                    //     console.log("direction = ",direction)
+                    //     console.log("returnObj[direction] = ",returnObj[direction])
+                    //     console.log("event.key = ",event.key)
+                        
+                    //     direction = event.key;
+                    // }
+                // }
             }
             
         });
         // 每隔x秒檢查方向
         setTimeout(function move(){
+            // 蛇頭
+            const snakeHead = snakes[0];
+            // 蛇頭座標
+            let x = snakeHead.offsetLeft;
+            let y = snakeHead.offsetTop;
+
             switch (direction) {
                 case "ArrowUp":
-                    console.log('↑')
-                    snakeHead.style.top = snakeHead.offsetTop - 10 + "px";
+                    // console.log('↑')
+                    // snakeHead.style.top = snakeHead.offsetTop - 10 + "px";
+                    y -= 10;
                     break;
                 case "ArrowDown":
-                    console.log('↓')
-                    snakeHead.style.top = snakeHead.offsetTop + 10 + "px";
+                    // console.log('↓')
+                    // snakeHead.style.top = snakeHead.offsetTop + 10 + "px";
+                    y += 10;
                     break;
                 case "ArrowLeft":
-                    console.log('←')
-                    snakeHead.style.left = snakeHead.offsetLeft - 10 + "px";
+                    // console.log('←')
+                    // snakeHead.style.left = snakeHead.offsetLeft - 10 + "px";
+                    x -= 10;
                     break;
                 case "ArrowRight":
-                    console.log('→')
-                    snakeHead.style.left = snakeHead.offsetLeft + 10 + "px";
+                    // console.log('→')
+                    // snakeHead.style.left = snakeHead.offsetLeft + 10 + "px";
+                    x += 10;
                     break;
             }
             // 檢測是否碰到食物
             if(snakeHead.offsetTop === food.offsetTop && snakeHead.offsetLeft === food.offsetLeft){
                 console.log("碰到食物");
+                // 更換食物位置
                 changeFood();
+                // 增加蛇身(在元素的最後一個子元素之後)，此時方塊不會加在頭後面
+                snake.insertAdjacentHTML("beforeend","<div/>");
+                score++;
+                scoreSpan.textContent = score;
+                if(score % 5 === 0 && level < 15){
+                    level++;
+                    levelSpan.textContent = level;
+                }
+            }
+
+            /*  判斷遊戲是否結束
+                    1.撞牆
+                    2.撞自己   
+            */
+            // 判斷是否撞牆
+            if(x < 0 || x > 290 || y < 0 || y > 290){
+                alert("hit the wall,GAME OVER !!!")
+                // return 即為遊戲結束，下方code都不會執行
+                // 即setTimeout不執行，即為結束
+                return;
+            }
+            if(direction){
+
+                // 判斷是否撞自己
+                // 寫.length會判斷到蛇尾和蛇頭有沒有撞到，但是依img02.png
+                // 頭和尾巴是沒有相撞的，但這個寫法停止遊戲
+                // 所以可以寫lengt-1 即不判斷頭尾碰撞
+                for(let i = 0; i < snakes.length-1; i++){
+                    console.log("snakes[i].offsetLeft =",snakes[i].offsetLeft )
+                    console.log("snakes[i].offsetTop =",snakes[i].offsetTop )
+                    if(snakes[i].offsetLeft === x && snakes[i].offsetTop === y){
+                        alert("hit myself,GAME OVER !!!")
+                        return;
+                    }
+                }
             }
 
 
+
+            // 要在上方if執行完後，也就是確認增加身體後，才去完成移動
+            // 獲取蛇尾
+            const snakeTail = snakes[snakes.length - 1];
+            // 移動蛇的位置(移動蛇尾)
+            snakeTail.style.left = x + "px";
+            snakeTail.style.top = y + "px";
+            // console.log(snakeTail)
+            // 參考img01.png
+            // 修改好蛇尾位置後，將它移動到蛇頭位置(在元素的第一個子元素之前)
+            snake.insertAdjacentElement("afterbegin",snakeTail)
+            keyActive = true;
+            
             // 需在計時器中調用一次，才可實現移動
-            setTimeout(() => {
-                move();
-            }, 300);
+            // 實現升級就加快，不能等於0，所以level最大值14
+            setTimeout(move, 300 - level * 20);
         }, 300);
     </script>
 </body>
